@@ -1,0 +1,64 @@
+{
+  "name": "one_batch_test",
+  "n_gpu": 1,
+    
+  "arch": {
+    "type": "FastSpeech",
+    "args": {
+      "vocab_size": 300
+      }
+  },
+  "data": {
+    "train": {
+      "batch_size": 64,
+      "num_workers": 0,
+      "datasets": [
+        {
+          "type": "BufferDataset",
+          "args": {
+            "data_path": "./data/train.txt",
+            "alignment_path": "./alignments",
+            "mel_ground_truth": "./mels",
+            "text_cleaners": "english_cleaners",
+            "wav_path": "./data/LJSpeech-1.1/wavs"
+          }
+        }
+      ]
+    }
+  },
+  "optimizer": {
+    "type": "Adam",
+    "args": {
+      "lr": 1e-2
+    }
+  },
+  "loss": {
+    "type": "FastSpeechLoss",
+    "args": {}
+  },
+  "metrics": [
+    
+  ],
+  "lr_scheduler": {
+    "type": "OneCycleLR",
+    "args": {
+      "steps_per_epoch": 300,
+      "epochs": 100,
+      "anneal_strategy": "cos",
+      "max_lr": 5e-4,
+      "pct_start": 0.1
+    }
+  },
+  "trainer": {
+    "epochs": 100,
+    "save_dir": "saved/",
+    "save_period": 10,
+    "verbosity": 2,
+    "monitor": "min val_loss",
+    "early_stop": 100,
+    "visualize": "wandb",
+    "wandb_project": "tss_project",
+    "len_epoch": 300,
+    "grad_norm_clip": 10
+  }
+}
