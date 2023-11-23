@@ -2,81 +2,63 @@
 
 ## Installation guide
 
-< Write your installation guide here >
+Run bash install from seminar notebook
 
-```shell
-pip install -r ./requirements.txt
+```
+#install libraries
+pip install torchaudio
+pip install wandb
+pip install gdown
+
+#download LjSpeech
+wget https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2 -o /dev/null
+mkdir data
+tar -xvf LJSpeech-1.1.tar.bz2 >> /dev/null
+mv LJSpeech-1.1 data/LJSpeech-1.1
+
+gdown https://drive.google.com/u/0/uc?id=1-EdH0t0loc6vPiuVtXdhsDtzygWNSNZx
+mv train.txt data/
+
+#download Waveglow
+gdown https://drive.google.com/u/0/uc?id=1WsibBTsuRg_SF2Z6L6NFRTT-NjEy1oTx
+mkdir -p waveglow/pretrained_model/
+mv waveglow_256channels_ljs_v2.pt waveglow/pretrained_model/waveglow_256channels.pt
+
+gdown https://drive.google.com/u/0/uc?id=1cJKJTmYd905a-9GFoo5gKjzhKjUVj83j
+tar -xvf mel.tar.gz
+echo $(ls mels | wc -l)
+
+#download alignments
+wget https://github.com/xcmyz/FastSpeech/raw/master/alignments.zip
+unzip alignments.zip >> /dev/null
+
+# we will use waveglow code, data and audio preprocessing from this repo
+git clone https://github.com/xcmyz/FastSpeech.git
+mv FastSpeech/text .
+mv FastSpeech/audio .
+mv FastSpeech/waveglow/* waveglow/
+mv FastSpeech/utils.py .
+mv FastSpeech/glow.py .
 ```
 
-## Recommended implementation order
+install requirenments
 
-You might be a little intimidated by the number of folders and classes. Try to follow this steps to gradually undestand
-the workflow.
-
-1) Test `hw_asr/tests/test_dataset.py`  and `hw_asr/tests/test_config.py` and make sure everythin works for you
-2) Implement missing functions to fix tests in  `hw_asr\tests\test_text_encoder.py`
-3) Implement missing functions to fix tests in  `hw_asr\tests\test_dataloader.py`
-4) Implement functions in `hw_asr\metric\utils.py`
-5) Implement missing function to run `train.py` with a baseline model
-6) Write your own model and try to overfit it on a single batch
-7) Implement ctc beam search and add metrics to calculate WER and CER over hypothesis obtained from beam search.
-8) ~~Pain and suffering~~ Implement your own models and train them. You've mastered this template when you can tune your
-   experimental setup just by tuning `configs.json` file and running `train.py`
-9) Don't forget to write a report about your work
-10) Get hired by Google the next day
-
-## Before submitting
-
-0) Make sure your projects run on a new machine after complemeting the installation guide or by 
-   running it in docker container.
-1) Search project for `# TODO: your code here` and implement missing functionality
-2) Make sure all tests work without errors
-   ```shell
-   python -m unittest discover hw_asr/tests
-   ```
-3) Make sure `test.py` works fine and works as expected. You should create files `default_test_config.json` and your
-   installation guide should download your model checpoint and configs in `default_test_model/checkpoint.pth`
-   and `default_test_model/config.json`.
-   ```shell
-   python test.py \
-      -c default_test_config.json \
-      -r default_test_model/checkpoint.pth \
-      -t test_data \
-      -o test_result.json
-   ```
-4) Use `train.py` for training
-
-## Credits
-
-This repository is based on a heavily modified fork
-of [pytorch-template](https://github.com/victoresque/pytorch-template) repository.
-
-## Docker
-
-You can use this project with docker. Quick start:
-
-```bash 
-docker build -t my_hw_asr_image . 
-docker run \
-   --gpus '"device=0"' \
-   -it --rm \
-   -v /path/to/local/storage/dir:/repos/asr_project_template/data/datasets \
-   -e WANDB_API_KEY=<your_wandb_api_key> \
-	my_hw_asr_image python -m unittest 
+```
+pip install -r requirements.txt
 ```
 
-Notes:
+load model
 
-* `-v /out/of/container/path:/inside/container/path` -- bind mount a path, so you wouldn't have to download datasets at
-  the start of every docker run.
-* `-e WANDB_API_KEY=<your_wandb_api_key>` -- set envvar for wandb (if you want to use it). You can find your API key
-  here: https://wandb.ai/authorize
+```
+python3 load_checkpoints.py
+```
 
-## TODO
+run test
 
-These barebones can use more tests. We highly encourage students to create pull requests to add more tests / new
-functionality. Current demands:
+```
+python3 test.py -c hw_asr/configs/one_batch_test_resume.json -r saved/models/one_batch_test/checkpoints/model_best/best_model.pth -t ./test_texts.txt
+```
 
-* Tests for beam search
-* README section to describe folders
-* Notebook to show how to work with `ConfigParser` and `config_parser.init_obj(...)`
+you can write your own texts in ```./test_texts.txt``` or  use ```-t {path_to_your_texts}```. Your texts will be splitted by \n
+
+results will be in folder ```./test_results/{alpha}/{beta}/{gamma}/s={wav_index}_waveglow_alpha_{alpha}_beta_{beta}_gamma_{gamma}.wav```
